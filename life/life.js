@@ -17,8 +17,8 @@ function getRandomArbitrary(min, max) {
 }
 
 var life = function(){
-	var width = 300;
-	var height = 300;
+	var width = 100;
+	var height = 100;
 	var matrix = [];
 	var next = [];
 	var population = 0;
@@ -27,6 +27,7 @@ var life = function(){
 	var ctx = canvas.getContext("2d");
 	var lineW = canvas.width / width;
 	var lineH = canvas.height / height;
+	var isGrid = true;
 	
 
 	return{
@@ -66,18 +67,40 @@ var life = function(){
 		 	next[i] = a;
 		 }
 
+		 ctx.beginPath();
+		 if(isGrid === true)
+		 {
+		 	ctx.strokeStyle="#555555";
+		 	for( i=0; i < width ; i+=1)
+		 	{
+		 		ctx.moveTo(i*lineW,0);
+		 		ctx.lineTo(i*lineW, height*lineH);
+		 		ctx.stroke(); 
+		 		
+		 	}
+
+		 	for( j=0; j < height ; j+=1)
+		 	{
+		 		ctx.moveTo(0,j*lineH);
+		 		ctx.lineTo(width*lineW,j*lineH);
+		 		ctx.stroke(); 
+		 	}
+		 }
 
 		 //console.log(this);
 		 setInterval(function(){
 		 	//console.log(that);
 		  	that.nextGen();
-		  }, 6);
+		  }, 100);
 		//this.nextGen();
 		},
 
 		drawLife : function(){
 			var i, j;
+			var stats = document.getElementById("stats");
+			population = 0;
 			//console.log("drawing generation "+generation);
+			ctx.beginPath();
 			for( i=0; i < width ; i+=1)
 			{
 			 for( j=0; j < height ; j+=1)
@@ -86,11 +109,35 @@ var life = function(){
 			  {
 			  	ctx.fillStyle = "rgb(0,0,0)";
 			  	ctx.fillRect (i*lineW, j*lineH, lineW, lineH);
+			  	population += 1;
 			  }
 			 } 
 
 			}
-			
+
+			ctx.beginPath();
+			if(isGrid === true)
+			{
+				ctx.strokeStyle="#BBBBBB";
+				for( i=0; i < width ; i+=1)
+				{
+					ctx.moveTo(i*lineW,0);
+					ctx.lineTo(i*lineW, height*lineH);
+					ctx.stroke(); 
+					
+				}
+
+				for( j=0; j < height ; j+=1)
+				{
+					ctx.moveTo(0,j*lineH);
+					ctx.lineTo(width*lineW,j*lineH);
+					ctx.stroke(); 
+				}
+			}
+
+
+
+			stats.innerHTML = "<p>Population : "+population+" | Generation : "+generation+"</p>";
 			return 1;
 		},
 
