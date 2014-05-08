@@ -28,7 +28,6 @@ var life = function(){
 	var lineW = canvas.width / width;
 	var lineH = canvas.height / height;
 	var isGrid = true;
-	
 
 	return{
 		init : function () {
@@ -66,6 +65,10 @@ var life = function(){
 		 	}
 		 	next[i] = a;
 		 }
+
+		 $("#myCanvas").mousemove( function(e){
+		 	next[Math.floor(e.clientX/lineW)][Math.floor(e.clientY/lineH)] = 1;
+		 });
 
 		 ctx.beginPath();
 		 if(isGrid === true)
