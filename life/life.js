@@ -55,6 +55,7 @@ var life = function(){
 			}
 
 		 }
+
 		 
 		 for( i=0; i < width ; i+=1)
 		 {
@@ -66,29 +67,10 @@ var life = function(){
 		 	next[i] = a;
 		 }
 
+
 		 $("#myCanvas").mousemove( function(e){
 		 	next[Math.floor(e.clientX/lineW)][Math.floor(e.clientY/lineH)] = 1;
 		 });
-
-		 ctx.beginPath();
-		 if(isGrid === true)
-		 {
-		 	ctx.strokeStyle="#555555";
-		 	for( i=0; i < width ; i+=1)
-		 	{
-		 		ctx.moveTo(i*lineW,0);
-		 		ctx.lineTo(i*lineW, height*lineH);
-		 		ctx.stroke(); 
-		 		
-		 	}
-
-		 	for( j=0; j < height ; j+=1)
-		 	{
-		 		ctx.moveTo(0,j*lineH);
-		 		ctx.lineTo(width*lineW,j*lineH);
-		 		ctx.stroke(); 
-		 	}
-		 }
 
 		 //console.log(this);
 		 setInterval(function(){

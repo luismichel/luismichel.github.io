@@ -1,0 +1,50 @@
+body {
+  padding-top: 50px;
+}
+.starter-template {
+  padding: 40px 15px;
+  text-align: center;
+}
+
+.summoner {
+	display : none;
+	float: left;
+}
+
+#summoner-container {
+	float: left;
+	width: 100%;
+}
+
+#summoner-stats {
+	float: left;
+}
+
+#summoner-stats ul {
+	list-style-type: none;
+}
+
+#summoner-profile {
+	float: left;
+}
+
+#summoner-profile ul{
+	list-style-type: none;
+}
+
+.game-type{
+	display: inline-block;
+}
+
+.left {
+	float: left;
+}
+
+.champ-pic {
+	display: inline-block;
+}
+
+#summoner-matches {
+	width: 300px;
+	padding-top: 50px;
+}
