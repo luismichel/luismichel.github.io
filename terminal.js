@@ -76,7 +76,7 @@ Commands = {
 		}, 
 		"demo" : {
 			description : "Show one of my demos <br>\
-			USAGE demo + [demoName] <br>\
+			USAGE demo [demoName] <br>\
 			- Lab<br>\
 			- Game<br>\
 			- LoL",
