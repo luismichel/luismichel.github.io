@@ -31,7 +31,7 @@ window.onload = function () {
 			}
 
 			container.removeChild(input);
-			container.insertBefore(input);
+			container.appendChild(input);
 			input.value = "";
 			input.focus();
 			i = 1;
