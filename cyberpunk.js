@@ -25,6 +25,10 @@ let abyssMessage;
 let abyssMessageShown = false;
 let abyssTakeover = 0.0; // Progress of the abyss takeover (0.0 to 1.0)
 
+// Console logging state tracking (only log when descending into chaos)
+let lastLoggedLevel = -1;
+let isDescending = true;
+
 // Vertex shader - simple passthrough
 const vertexShaderSource = `
     attribute vec2 position;
@@ -402,39 +406,65 @@ function updateSystemStatus() {
     // Update status indicator based on scroll distortion
     const bodyElement = document.body;
 
+    // Track if we're descending (scrolling down) or ascending (scrolling up)
+    const currentLevel = distortionLevel;
+    if (currentLevel > lastLoggedLevel) {
+        isDescending = true;
+    } else if (currentLevel < lastLoggedLevel) {
+        isDescending = false;
+    }
+
+    let logLevel = 0; // 0=stable, 1=fluctuating, 2=warning, 3=critical, 4=emergency, 5=abyss
+
     if (distortionLevel < 0.5) {
         statusIndicator.querySelector('.status-value').textContent = 'STABLE';
         statusIndicator.classList.remove('glitching', 'warning', 'critical');
         bodyElement.setAttribute('data-state', 'stable');
+        logLevel = 0;
     } else if (distortionLevel < 2.0) {
         statusIndicator.querySelector('.status-value').textContent = 'FLUCTUATING';
         statusIndicator.classList.add('glitching');
         statusIndicator.classList.remove('warning', 'critical');
         bodyElement.setAttribute('data-state', 'fluctuating');
+        logLevel = 1;
     } else if (distortionLevel < 4.0) {
         statusIndicator.querySelector('.status-value').textContent = 'WARNING';
         statusIndicator.classList.add('glitching', 'warning');
         statusIndicator.classList.remove('critical');
         bodyElement.setAttribute('data-state', 'warning');
+        logLevel = 2;
     } else if (distortionLevel < 8.0) {
         statusIndicator.querySelector('.status-value').textContent = 'CRITICAL';
         statusIndicator.classList.add('glitching', 'critical');
         statusIndicator.classList.remove('warning');
         bodyElement.setAttribute('data-state', 'critical');
+        logLevel = 3;
     } else if (distortionLevel < 15.0) {
         statusIndicator.querySelector('.status-value').textContent = 'EMERGENCY';
         statusIndicator.classList.add('glitching', 'critical');
         bodyElement.setAttribute('data-state', 'emergency');
+        logLevel = 4;
     } else if (distortionLevel < 25.0) {
         // Extended emergency state before abyss
         statusIndicator.querySelector('.status-value').textContent = 'EMERGENCY';
         statusIndicator.classList.add('glitching', 'critical');
         bodyElement.setAttribute('data-state', 'emergency');
+        logLevel = 4;
     } else {
         // ABYSS state for extreme distortion (now at 25.0+)
         statusIndicator.querySelector('.status-value').textContent = 'ABYSS';
         statusIndicator.classList.add('glitching', 'critical');
         bodyElement.setAttribute('data-state', 'abyss');
+        logLevel = 5;
+    }
+
+    // Console logging - only when descending into chaos
+    if (isDescending && logLevel > lastLoggedLevel) {
+        logChaosMessage(logLevel);
+        lastLoggedLevel = logLevel;
+    } else if (!isDescending && logLevel < lastLoggedLevel - 0.5) {
+        // Reset tracking when scrolling back up significantly
+        lastLoggedLevel = logLevel;
     }
 
     // Easter egg: Abyss takeover - grid squares turn red from edges to center
@@ -484,6 +514,45 @@ function updateSystemStatus() {
     }
 
     requestAnimationFrame(updateSystemStatus);
+}
+
+// ===== Console Logging - Chronological Descent =====
+function logChaosMessage(level) {
+    const messages = {
+        1: {
+            text: '> 午前8:15 - 計算開始\n> パターン認識: 処理中\n> 数列解析: 進行中',
+            color: '#00ffff',
+            bg: '#001a1a'
+        },
+        2: {
+            text: '> 午前9:03 - 警告: 異常パターン\n> エントロピー増加\n> 収束点: 不安定',
+            color: '#ffaa00',
+            bg: '#1a1500'
+        },
+        3: {
+            text: '> 午前9:17 - エラー: フィードバックループ検出\n> 確率行列: 崩壊\n> パラメータ制御: 喪失',
+            color: '#ff6b35',
+            bg: '#1a0f00'
+        },
+        4: {
+            text: '> 午前9:48 - 緊急: システム崩壊検出\n> 制御不能\n> バックアップ: 失敗\n> 修復プロトコル: 開始...',
+            color: '#ff2a2a',
+            bg: '#1a0000'
+        },
+        5: {
+            text: '> 午前10:00 - リターンキーを押してください\n> 午前10:00 - リターンキーを押してください\n> 午前10:00 - リターンキーを押してください\n\n> [システム崩壊]\n> [接続切断]\n> [虚無]',
+            color: '#ff0000',
+            bg: '#1a0000'
+        }
+    };
+
+    const msg = messages[level];
+    if (msg) {
+        console.log(
+            `%c${msg.text}`,
+            `color: ${msg.color}; background: ${msg.bg}; padding: 8px; font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 1.6;`
+        );
+    }
 }
 
 // ===== Pi Movie Inspired Scrolling Text =====
