@@ -223,8 +223,23 @@ const fragmentShaderSource = `
             // Determine if this cell should be red based on takeover progress
             float redAmount = smoothstep(cellThreshold - 0.1, cellThreshold + 0.1, u_abyssTakeover);
 
-            // Dark blood red color for abyss
-            vec3 abyssRed = vec3(0.1, 0.0, 0.0); // Very dark red #1a0000
+            // Add variance to red tone per cell (slight variation)
+            float redVariance = (cellRandom - 0.5) * 0.04; // -0.02 to +0.02 variation
+
+            // Dark blood red color for abyss with per-cell variation
+            vec3 abyssRed = vec3(0.1 + redVariance, 0.0, 0.0); // Base #1a0000 with variance
+
+            // Pulsating effect like a cursor - use time and cell random for offset
+            float pulseOffset = cellRandom * 6.28; // Random phase offset per cell
+            float pulseSpeed = 2.0 + cellRandom * 1.0; // Slight speed variation
+            float pulse = 0.5 + 0.5 * sin(u_time * pulseSpeed + pulseOffset);
+
+            // Only pulse newly turned red squares (redAmount between 0.3 and 1.0)
+            float pulseFactor = smoothstep(0.3, 0.5, redAmount) * smoothstep(1.0, 0.8, redAmount);
+            float pulseIntensity = pulseFactor * pulse * 0.15;
+
+            // Apply pulse to red color
+            abyssRed += vec3(pulseIntensity, 0.0, 0.0);
 
             // Fill the entire grid square (not just lines)
             vec2 cellPos = fract(st * gridSize);
@@ -421,8 +436,8 @@ function updateSystemStatus() {
     if (abyssMessage) {
         if (distortionLevel > 15.0) {
             // Calculate takeover progress based on how far beyond threshold we are
-            // Maps distortionLevel 15.0-30.0 to abyssTakeover 0.0-1.0
-            const targetTakeover = Math.min((distortionLevel - 15.0) / 15.0, 1.0);
+            // Maps distortionLevel 15.0-45.0 to abyssTakeover 0.0-1.0 (larger threshold)
+            const targetTakeover = Math.min((distortionLevel - 15.0) / 30.0, 1.0);
 
             // Smoothly animate to target takeover value
             anime({
@@ -741,20 +756,63 @@ document.addEventListener('mousemove', (e) => {
         easing: 'easeOutQuad'
     });
 
-    // Title reacts inversely to mouse position (moves away from cursor)
-    const titleMoveX = -(e.clientX - window.innerWidth / 2) * 0.015;
-    const titleMoveY = -(e.clientY - window.innerHeight / 2) * 0.015;
+    // All text reacts inversely to mouse position (moves away from cursor)
+    // Main title has strongest effect
+    const titleMoveX = -(e.clientX - window.innerWidth / 2) * 0.05;
+    const titleMoveY = -(e.clientY - window.innerHeight / 2) * 0.05;
 
-    // Scale title based on mouse velocity
+    // Subtitle has moderate effect with slight variation
+    const subtitleMoveX = -(e.clientX - window.innerWidth / 2) * 0.035;
+    const subtitleMoveY = -(e.clientY - window.innerHeight / 2) * 0.035;
+
+    // Bio text has subtle effect with more variation
+    const bioMoveX = -(e.clientX - window.innerWidth / 2) * 0.025;
+    const bioMoveY = -(e.clientY - window.innerHeight / 2) * 0.025;
+
+    // Contact section has lightest effect
+    const contactMoveX = -(e.clientX - window.innerWidth / 2) * 0.02;
+    const contactMoveY = -(e.clientY - window.innerHeight / 2) * 0.02;
+
+    // Scale based on mouse velocity
     const velocityScale = Math.min(mouseVelocity * 0.5, 0.15);
     const titleScale = 1.0 + velocityScale;
+    const subtitleScale = 1.0 + velocityScale * 0.7;
 
+    // Animate main title
     anime({
         targets: '.glitch',
         translateX: titleMoveX,
         translateY: titleMoveY,
         scale: titleScale,
         duration: 300,
+        easing: 'easeOutQuad'
+    });
+
+    // Animate subtitle
+    anime({
+        targets: '.subtitle',
+        translateX: subtitleMoveX,
+        translateY: subtitleMoveY,
+        scale: subtitleScale,
+        duration: 350,
+        easing: 'easeOutQuad'
+    });
+
+    // Animate bio texts with slight offset
+    anime({
+        targets: '.bio-text',
+        translateX: bioMoveX,
+        translateY: bioMoveY,
+        duration: 400,
+        easing: 'easeOutQuad'
+    });
+
+    // Animate contact section
+    anime({
+        targets: '.contact-section',
+        translateX: contactMoveX,
+        translateY: contactMoveY,
+        duration: 450,
         easing: 'easeOutQuad'
     });
 });
