@@ -627,6 +627,7 @@ body {
     z-index: 2001;
     opacity: 0;
     pointer-events: none;
+    background-color: #1a0000; /* Match grid red color */
     transition: opacity 2s ease-in;
 }
 
@@ -647,20 +648,20 @@ body {
 
 .japanese-warning {
     font-family: 'Noto Serif JP', serif;
-    font-size: clamp(4rem, 15vw, 10rem);
+    font-size: clamp(2.5rem, 8vw, 5rem);
     font-weight: 900;
     color: #000000;
     text-shadow:
         0 0 20px rgba(0, 0, 0, 0.8),
         0 0 40px rgba(0, 0, 0, 0.6);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     letter-spacing: 0.2em;
     animation: abyss-pulse 3s ease-in-out infinite;
 }
 
 .japanese-subtitle {
     font-family: 'Noto Serif JP', serif;
-    font-size: clamp(1.5rem, 4vw, 3rem);
+    font-size: clamp(1rem, 2.5vw, 1.8rem);
     font-weight: 700;
     color: #000000;
     opacity: 0.7;
@@ -690,10 +691,10 @@ body {
 
 @media (max-width: 768px) {
     .japanese-warning {
-        font-size: clamp(2.5rem, 12vw, 6rem);
+        font-size: clamp(2rem, 10vw, 4rem);
     }
 
     .japanese-subtitle {
-        font-size: clamp(1rem, 3vw, 2rem);
+        font-size: clamp(0.8rem, 2.5vw, 1.5rem);
     }
 }

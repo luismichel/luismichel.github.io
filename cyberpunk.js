@@ -21,8 +21,9 @@ let mouseVelocity = 0;
 let lastMouseTime = 0;
 
 // Easter egg elements
-let redVignette, abyssMessage;
+let abyssMessage;
 let abyssMessageShown = false;
+let abyssTakeover = 0.0; // Progress of the abyss takeover (0.0 to 1.0)
 
 // Vertex shader - simple passthrough
 const vertexShaderSource = `
@@ -41,6 +42,7 @@ const fragmentShaderSource = `
     uniform float u_glitchIntensity;
     uniform vec3 u_ripples[3]; // x, y, age for each ripple
     uniform float u_scrollDistortion; // Scroll-based distortion parameter
+    uniform float u_abyssTakeover; // Abyss takeover progress (0.0 to 1.0)
 
     // Noise function
     float random(vec2 st) {
@@ -198,6 +200,46 @@ const fragmentShaderSource = `
             color.b += b * 0.5;
         }
 
+        // ABYSS TAKEOVER: Red grid squares spreading from edges to center
+        if (u_abyssTakeover > 0.0) {
+            // Calculate which grid cell we're in
+            vec2 gridCell = floor(st * gridSize);
+
+            // Distance from center (in grid cell coordinates)
+            vec2 centerCell = floor(vec2(0.5, 0.5) * gridSize);
+            float distFromCenter = length(gridCell - centerCell);
+            float maxDist = length(centerCell);
+
+            // Normalize distance (0.0 at center, 1.0 at edges)
+            float normalizedDist = distFromCenter / maxDist;
+
+            // Add chaotic variation per cell using random function
+            float cellRandom = random(gridCell * 0.1);
+
+            // Cells closer to edges turn red first
+            // Add randomness to make it chaotic (-0.3 to +0.3 variation)
+            float cellThreshold = (1.0 - normalizedDist) + (cellRandom - 0.5) * 0.6;
+
+            // Determine if this cell should be red based on takeover progress
+            float redAmount = smoothstep(cellThreshold - 0.1, cellThreshold + 0.1, u_abyssTakeover);
+
+            // Dark blood red color for abyss
+            vec3 abyssRed = vec3(0.1, 0.0, 0.0); // Very dark red #1a0000
+
+            // Fill the entire grid square (not just lines)
+            vec2 cellPos = fract(st * gridSize);
+            float squareMask = step(0.02, cellPos.x) * step(0.02, cellPos.y) *
+                              step(cellPos.x, 0.98) * step(cellPos.y, 0.98);
+
+            // Blend in the red square
+            color = mix(color, abyssRed, redAmount * squareMask);
+
+            // Keep grid lines visible on red squares
+            if (redAmount > 0.5) {
+                color += gridLine * vec3(0.3, 0.0, 0.0) * redAmount;
+            }
+        }
+
         gl_FragColor = vec4(color, 0.8);
     }
 `;
@@ -320,6 +362,10 @@ function renderWebGL() {
     const scrollLocation = gl.getUniformLocation(program, 'u_scrollDistortion');
     gl.uniform1f(scrollLocation, scrollAccumulator);
 
+    // Update abyss takeover uniform
+    const abyssLocation = gl.getUniformLocation(program, 'u_abyssTakeover');
+    gl.uniform1f(abyssLocation, abyssTakeover);
+
     // Draw
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -371,31 +417,47 @@ function updateSystemStatus() {
         bodyElement.setAttribute('data-state', 'abyss');
     }
 
-    // Easter egg: Red vignette effect for extreme scroll
-    if (redVignette && abyssMessage) {
+    // Easter egg: Abyss takeover - grid squares turn red from edges to center
+    if (abyssMessage) {
         if (distortionLevel > 15.0) {
-            // Start showing red vignette
-            redVignette.classList.add('active');
+            // Calculate takeover progress based on how far beyond threshold we are
+            // Maps distortionLevel 15.0-30.0 to abyssTakeover 0.0-1.0
+            const targetTakeover = Math.min((distortionLevel - 15.0) / 15.0, 1.0);
 
-            // Full takeover at extreme levels
-            if (distortionLevel > 25.0) {
-                redVignette.classList.add('full-takeover');
-                // Show cryptic message after delay (only once)
-                if (!abyssMessageShown) {
-                    abyssMessageShown = true;
-                    setTimeout(() => {
-                        if (abyssMessage) {
-                            abyssMessage.classList.add('visible');
-                        }
-                    }, 2000);
+            // Smoothly animate to target takeover value
+            anime({
+                targets: window,
+                abyssTakeover: targetTakeover,
+                duration: 300,
+                easing: 'easeOutQuad',
+                update: function(anim) {
+                    abyssTakeover = window.abyssTakeover;
                 }
-            } else {
-                redVignette.classList.remove('full-takeover');
+            });
+
+            // Show cryptic message when takeover is complete (only once)
+            if (abyssTakeover >= 0.95 && !abyssMessageShown) {
+                abyssMessageShown = true;
+                setTimeout(() => {
+                    if (abyssMessage) {
+                        abyssMessage.classList.add('visible');
+                    }
+                }, 1500);
+            } else if (abyssTakeover < 0.95) {
                 abyssMessage.classList.remove('visible');
                 abyssMessageShown = false;
             }
         } else {
-            redVignette.classList.remove('active', 'full-takeover');
+            // Reset takeover when scrolling back up
+            anime({
+                targets: window,
+                abyssTakeover: 0.0,
+                duration: 500,
+                easing: 'easeOutQuad',
+                update: function(anim) {
+                    abyssTakeover = window.abyssTakeover;
+                }
+            });
             abyssMessage.classList.remove('visible');
             abyssMessageShown = false;
         }
@@ -407,8 +469,10 @@ function updateSystemStatus() {
 // ===== Anime.js Animations =====
 document.addEventListener('DOMContentLoaded', function() {
     statusIndicator = document.querySelector('.status-indicator');
-    redVignette = document.querySelector('.red-vignette');
     abyssMessage = document.querySelector('.abyss-message');
+
+    // Initialize window.abyssTakeover for anime.js
+    window.abyssTakeover = 0.0;
 
     // Initialize WebGL
     initWebGL();
@@ -773,8 +837,17 @@ document.addEventListener('dblclick', (e) => {
     document.body.setAttribute('data-state', 'stable');
 
     // Reset easter egg elements
-    if (redVignette && abyssMessage) {
-        redVignette.classList.remove('active', 'full-takeover');
+    anime({
+        targets: window,
+        abyssTakeover: 0.0,
+        duration: 1500,
+        easing: 'easeOutElastic(1, .6)',
+        update: function(anim) {
+            abyssTakeover = window.abyssTakeover;
+        }
+    });
+
+    if (abyssMessage) {
         abyssMessage.classList.remove('visible');
         abyssMessageShown = false;
     }
