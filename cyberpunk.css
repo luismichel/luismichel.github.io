@@ -743,103 +743,34 @@ body {
         opacity: 0.05;
     }
 
-    .phi-digits {
-        font-size: 0.7rem;
-    }
-
     .glitch-terminal {
-        height: 80px;
+        height: 150px;
         font-size: 11px;
-        padding: 8px;
+        padding: 12px;
     }
 }
 
-/* Golden Ratio φ Digits Display */
-.phi-digits {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.9rem;
-    color: #FFA500;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 1000;
-    text-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
-    transition: opacity 1s ease;
-    letter-spacing: 0.05em;
-}
-
-.phi-digits.visible {
-    opacity: 0.6;
-}
-
-#phi-sequence {
-    font-weight: 700;
-}
-
-/* Golden Spiral Overlay */
-.golden-spiral-overlay {
+/* Glitch Terminal - Quake Style (Top) */
+.glitch-terminal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0;
-    transition: opacity 2s ease;
-}
-
-.golden-spiral-overlay.visible {
-    opacity: 1;
-}
-
-#fibonacci-spiral {
-    width: 100%;
-    height: 100%;
-    animation: spiralRotate 60s linear infinite;
-}
-
-#spiral-path {
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6))
-            drop-shadow(0 0 20px rgba(255, 107, 53, 0.3));
-    stroke-width: 2;
-    opacity: 0.4;
-    transition: opacity 1s ease, stroke 1s ease;
-}
-
-body[data-state="emergency"] #spiral-path,
-body[data-state="abyss"] #spiral-path {
-    stroke: #ff2a2a;
-    opacity: 0.6;
-}
-
-@keyframes spiralRotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Glitch Terminal */
-.glitch-terminal {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 120px;
-    background: rgba(0, 0, 0, 0.85);
+    height: 200px;
+    background: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(10px);
-    border-top: 1px solid #00ff00;
-    padding: 12px;
+    border-bottom: 2px solid #00ff00;
+    padding: 16px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     color: #00ff00;
-    z-index: 1500;
+    z-index: 2500;
     opacity: 0;
-    transform: translateY(100%);
-    transition: opacity 1s ease, transform 1s ease, border-color 1s ease, color 1s ease;
-    overflow: hidden;
-    cursor: text;
+    transform: translateY(-100%);
+    transition: opacity 0.5s ease, transform 0.5s ease, border-color 1s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 4px 20px rgba(0, 255, 0, 0.2);
 }
 
 .glitch-terminal.visible {

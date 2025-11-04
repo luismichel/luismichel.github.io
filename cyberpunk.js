@@ -467,75 +467,38 @@ function updateSystemStatus() {
         lastLoggedLevel = logLevel;
     }
 
-    // Golden Ratio Visualization - Progressive Activation
-    const phiDisplay = document.querySelector('.phi-digits');
-    const spiralOverlay = document.querySelector('.golden-spiral-overlay');
-
-    if (distortionLevel >= 8.0) {
-        // CRITICAL: Show φ digits and start expanding
-        if (phiDisplay && !phiDisplay.classList.contains('visible')) {
-            phiDisplay.classList.add('visible');
-            generateFibonacciSpiral();
-            startPhiExpansion(500); // Slow expansion initially
-        }
-    }
-
-    if (distortionLevel >= 15.0) {
-        // EMERGENCY: Show spiral and speed up digit expansion
-        if (spiralOverlay && !spiralOverlay.classList.contains('visible')) {
-            spiralOverlay.classList.add('visible');
-        }
-        if (phiInterval) {
-            stopPhiExpansion();
-            startPhiExpansion(200); // Faster expansion
-        }
-    }
-
-    if (distortionLevel >= 25.0) {
-        // ABYSS: Maximum speed digit expansion
-        if (phiInterval) {
-            stopPhiExpansion();
-            startPhiExpansion(50); // Very fast expansion
-        }
-    }
-
-    if (distortionLevel < 8.0) {
-        // Reset when returning to lower states
-        if (phiDisplay) phiDisplay.classList.remove('visible');
-        if (spiralOverlay) spiralOverlay.classList.remove('visible');
-        resetPhiDigits();
-    }
+    // TODO: Integrate Fibonacci spiral into WebGL grid distortion at ABYSS level
 
     // Glitch Terminal - Progressive Corruption
     const terminal = document.querySelector('.glitch-terminal');
 
     if (distortionLevel >= 8.0 && distortionLevel < 15.0) {
-        // CRITICAL: Terminal appears, slow glitching
+        // CRITICAL: Terminal appears, human typing repair commands
         if (terminal && !terminal.classList.contains('visible')) {
             terminal.classList.add('visible');
-            startTerminalGlitching(3000); // 1 character every 3 seconds
+            startTerminalTyping('critical');
             corruptTerminalPrompt(0);
         }
     }
 
     if (distortionLevel >= 15.0 && distortionLevel < 25.0) {
-        // EMERGENCY: Faster glitching, corrupted prompt
+        // EMERGENCY: More desperate repair commands
         if (terminal) {
             if (!terminal.classList.contains('visible')) {
                 terminal.classList.add('visible');
             }
-            stopTerminalGlitching();
-            startTerminalGlitching(1000); // 1 character per second
+            stopTerminalTyping();
+            startTerminalTyping('emergency');
             corruptTerminalPrompt(1);
         }
     }
 
     if (distortionLevel >= 25.0) {
-        // ABYSS: Full corruption, rapid spam
+        // ABYSS: Panicked, corrupted commands
         if (terminal) {
             terminal.classList.add('corrupted');
-            stopTerminalGlitching();
-            startTerminalGlitching(100); // 10 characters per second
+            stopTerminalTyping();
+            startTerminalTyping('abyss');
             corruptTerminalPrompt(3);
         }
     }
@@ -544,16 +507,16 @@ function updateSystemStatus() {
         // Reset terminal when returning to lower states
         if (terminal) {
             terminal.classList.remove('visible', 'corrupted');
+            stopTerminalTyping();
             clearTerminal();
         }
     }
 
     // Trigger mock network requests on state transitions (when descending)
-    if (isDescending && logLevel > lastLoggedLevel) {
+    if (isDescending && logLevel > lastLoggedLevel && logLevel >= 1 && logLevel <= 5) {
         const stateMap = ['stable', 'fluctuating', 'warning', 'critical', 'emergency', 'abyss'];
-        if (logLevel >= 1 && logLevel <= 5) {
-            triggerMockRequests(stateMap[logLevel]);
-        }
+        // Don't await - let it run in background
+        triggerMockRequests(stateMap[logLevel]).catch(err => console.error('Request error:', err));
     }
 
     // Easter egg: Abyss takeover - grid squares turn red from edges to center
@@ -644,77 +607,49 @@ function logChaosMessage(level) {
     }
 }
 
-// ===== Golden Ratio Visualization =====
+// ===== Golden Ratio for WebGL Grid Distortion =====
 const PHI = 1.6180339887498948482;
-const PHI_DIGITS = '1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374847540880753868917521266338622235369317931800607667263544333890865959395829056383226613199282902678806752087668925017116962070322210432162695486262963136144381497587012203408058879544547492461856953648644492410443207713449470495658467885098743394422125448770664780915884607499887124007652170575179788341662562494075890697040002812104276217711177780531531714101170466659914669798731761356006708748071013179523689427521948435305678300228785699782977834784587822891109762500302696156171';
-
-let phiDigitIndex = 1;
-let phiInterval = null;
-let spiralGenerated = false;
-
-function generateFibonacciSpiral() {
-    if (spiralGenerated) return;
-
-    const path = document.getElementById('spiral-path');
-    if (!path) return;
-
-    const centerX = 500;
-    const centerY = 500;
-    const points = [];
-    const numPoints = 200;
-
-    // Generate spiral using golden ratio
-    for (let i = 0; i < numPoints; i++) {
-        const theta = i * 0.1; // Angle in radians
-        const r = Math.pow(PHI, theta / (Math.PI / 2)) * 5; // Exponential spiral
-        const x = centerX + r * Math.cos(theta);
-        const y = centerY + r * Math.sin(theta);
-        points.push({x, y});
-    }
-
-    // Create SVG path
-    let pathData = `M ${points[0].x} ${points[0].y}`;
-    for (let i = 1; i < points.length; i++) {
-        pathData += ` L ${points[i].x} ${points[i].y}`;
-    }
-
-    path.setAttribute('d', pathData);
-    spiralGenerated = true;
-}
-
-function expandPhiDigits() {
-    const sequence = document.getElementById('phi-sequence');
-    if (!sequence || phiDigitIndex >= PHI_DIGITS.length) return;
-
-    sequence.textContent = PHI_DIGITS.substring(0, phiDigitIndex);
-    phiDigitIndex++;
-}
-
-function startPhiExpansion(speed = 500) {
-    if (phiInterval) clearInterval(phiInterval);
-    phiInterval = setInterval(expandPhiDigits, speed);
-}
-
-function stopPhiExpansion() {
-    if (phiInterval) {
-        clearInterval(phiInterval);
-        phiInterval = null;
-    }
-}
-
-function resetPhiDigits() {
-    phiDigitIndex = 1;
-    const sequence = document.getElementById('phi-sequence');
-    if (sequence) sequence.textContent = '1';
-    stopPhiExpansion();
-}
 
 // ===== Glitch Terminal =====
 let terminalInput = null;
 let terminalPrompt = null;
 let terminalCursor = null;
 let glitchInterval = null;
+let typingInterval = null;
 let terminalFocused = false;
+let currentCommandIndex = 0;
+let currentCharIndex = 0;
+let commandQueue = [];
+let isTyping = false;
+
+const HUMAN_TYPING_SPEED = 240; // milliseconds per character (50 APM)
+
+const REPAIR_COMMANDS = {
+    critical: [
+        'systemctl status network',
+        'ping 8.8.8.8',
+        'netstat -tulpn',
+        'ps aux | grep anomaly',
+        'journalctl -xe | tail -20',
+        'systemctl restart network.service'
+    ],
+    emergency: [
+        'kill -9 $(pidof chaos_proc)',
+        './repair_matrix.sh --force',
+        'sudo fsck -y /dev/reality',
+        'reboot --emergency',
+        'mount -o remount,rw /sys/core',
+        'rm -rf /var/corruption/*'
+    ],
+    abyss: [
+        'sudo halt -p',
+        'shutdown -h now',
+        '̴̡̢s̴̨h̴̤ṵ̴̗t̴̘̪d̴̫̬o̴̮̯w̴̹͇n̴̈́̓ ̴̨-̴̰̗h̴̘̪ ̴̫̬n̴̮̯o̴̹͇ẅ̴́̓',  // Corrupted
+        'H̴E̵L̶P̷',
+        'p̴l̴e̴a̴s̴e̴ ̴s̴t̴o̴p̴',
+        '̴̡̢̧̨̛͝͠͝͝͠w̴h̴a̴t̴ ̴i̴s̴ ̴h̴a̴p̴p̴e̴n̴i̴n̴g̴'
+    ]
+};
 
 const GLITCH_CHARS = [
     '̴̡̢̧̨̛̤̰̗̘̪̫̬̮̯̹͇̈́̓̽͊̔͐͑͒͘͜͝͠͝͝͠',
@@ -796,6 +731,59 @@ function corruptTerminalPrompt(level = 0) {
     }
 }
 
+function typeNextCharacter() {
+    if (!isTyping || commandQueue.length === 0 || !terminalInput) return;
+
+    const currentCommand = commandQueue[currentCommandIndex];
+    if (!currentCommand) {
+        isTyping = false;
+        return;
+    }
+
+    if (currentCharIndex < currentCommand.length) {
+        // Type next character
+        terminalInput.textContent += currentCommand[currentCharIndex];
+        currentCharIndex++;
+    } else {
+        // Command finished, simulate Enter and move to next
+        currentCharIndex = 0;
+        currentCommandIndex++;
+
+        if (currentCommandIndex >= commandQueue.length) {
+            // All commands typed, restart the queue
+            currentCommandIndex = 0;
+        }
+
+        // Clear terminal and start next command after a pause
+        setTimeout(() => {
+            if (terminalInput) terminalInput.textContent = '';
+        }, 1000);
+    }
+}
+
+function startTerminalTyping(level = 'critical') {
+    stopTerminalTyping();
+
+    // Set command queue based on state level
+    commandQueue = REPAIR_COMMANDS[level] || REPAIR_COMMANDS.critical;
+    currentCommandIndex = 0;
+    currentCharIndex = 0;
+    isTyping = true;
+
+    if (terminalInput) terminalInput.textContent = '';
+
+    // Start typing with human speed
+    typingInterval = setInterval(typeNextCharacter, HUMAN_TYPING_SPEED);
+}
+
+function stopTerminalTyping() {
+    if (typingInterval) {
+        clearInterval(typingInterval);
+        typingInterval = null;
+    }
+    isTyping = false;
+}
+
 function startTerminalGlitching(frequency) {
     stopTerminalGlitching();
     glitchInterval = setInterval(() => {
@@ -813,6 +801,7 @@ function stopTerminalGlitching() {
 function clearTerminal() {
     if (terminalInput) terminalInput.textContent = '';
     if (terminalPrompt) terminalPrompt.textContent = 'root@system:~$ ';
+    stopTerminalTyping();
     stopTerminalGlitching();
 }
 
@@ -1376,12 +1365,7 @@ document.addEventListener('dblclick', (e) => {
         abyssMessageShown = false;
     }
 
-    // Reset golden ratio elements
-    const phiDisplay = document.querySelector('.phi-digits');
-    const spiralOverlay = document.querySelector('.golden-spiral-overlay');
-    if (phiDisplay) phiDisplay.classList.remove('visible');
-    if (spiralOverlay) spiralOverlay.classList.remove('visible');
-    resetPhiDigits();
+    // Golden ratio elements removed - now integrated into WebGL grid
 
     // Reset terminal
     const terminal = document.querySelector('.glitch-terminal');
