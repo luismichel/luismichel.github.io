@@ -1,12 +1,73 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<script type="text/javascript" src="terminal.js" ></script>
-	<link rel="stylesheet" type="text/css" href="terminal.css">
-	<link rel="stylesheet" type="text/css" href="reset.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luis Michel | Developer</title>
+    <link rel="stylesheet" type="text/css" href="reset.css">
+    <link rel="stylesheet" type="text/css" href="cyberpunk.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 </head>
- <body>
- 	<div id="container">
- 		<p>Welcome, human</p>
- 	</div>
- </body>
+<body>
+    <div class="scanlines"></div>
+    <div class="background-grid"></div>
+
+    <div class="container">
+        <!-- Floating particles -->
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+
+        <!-- Main content -->
+        <div class="content">
+            <div class="glitch-wrapper">
+                <h1 class="glitch" data-text="LUIS MICHEL">LUIS MICHEL</h1>
+            </div>
+
+            <div class="subtitle-container">
+                <p class="subtitle glitch-text" data-text="[ DEVELOPER ]">[ DEVELOPER ]</p>
+            </div>
+
+            <div class="bio">
+                <p class="bio-text">
+                    <span class="cursor-blink">></span> Building digital experiences in the void
+                </p>
+                <p class="bio-text">
+                    <span class="cursor-blink">></span> Architecting the future, one line at a time
+                </p>
+            </div>
+
+            <div class="contact-section">
+                <div class="contact-line">
+                    <span class="prompt">root@cyberspace:~$</span>
+                    <span class="command">contact</span>
+                </div>
+                <div class="contact-box">
+                    <a href="mailto:me@luismichel.dev" class="email-link glitch-link" data-text="me@luismichel.dev">
+                        me@luismichel.dev
+                    </a>
+                </div>
+            </div>
+
+            <div class="matrix-code"></div>
+        </div>
+
+        <!-- Animated borders -->
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+    </div>
+
+    <script src="cyberpunk.js"></script>
+</body>
 </html>
