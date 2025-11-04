@@ -103,9 +103,9 @@ const fragmentShaderSource = `
         // Color cycling for glitch
         float colorShift = noise(vec2(u_time * 3.0, st.y * 5.0)) * glitchZone;
 
-        // Cyan grid with glitch color shifts
-        vec3 gridColor = vec3(0.0, 1.0, 1.0); // Cyan
-        vec3 glitchColor = vec3(1.0, 0.0, 1.0); // Magenta
+        // Emergency red grid with glitch color shifts
+        vec3 gridColor = vec3(1.0, 0.165, 0.165); // Emergency Red
+        vec3 glitchColor = vec3(1.0, 0.42, 0.21); // Alert Orange
         vec3 finalGridColor = mix(gridColor, glitchColor, colorShift);
 
         // Apply grid
@@ -113,7 +113,7 @@ const fragmentShaderSource = `
 
         // Horizontal tear lines
         float tearLine = step(0.995, noise(vec2(st.y * 2.0, u_time * 5.0)));
-        color += tearLine * glitchZone * vec3(0.0, 1.0, 1.0);
+        color += tearLine * glitchZone * vec3(1.0, 0.165, 0.165);
 
         // RGB split effect
         if (glitchZone > 0.5) {
@@ -461,8 +461,8 @@ function createMatrixRain() {
         column.style.left = (i * 5) + '%';
         column.style.top = '-100px';
         column.style.fontSize = '14px';
-        column.style.color = 'rgba(0, 255, 255, 0.5)';
-        column.style.textShadow = '0 0 5px #00ffff';
+        column.style.color = 'rgba(255, 42, 42, 0.5)';
+        column.style.textShadow = '0 0 5px #ff2a2a';
         column.style.whiteSpace = 'pre';
         column.style.fontFamily = 'monospace';
 
@@ -568,16 +568,16 @@ window.addEventListener('resize', () => {
     }
 });
 
-// Cyberpunk loading sequence
+// Emergency boot sequence
 window.addEventListener('load', () => {
     const bootMessages = [
-        '> INITIALIZING NEURAL INTERFACE...',
+        '> SYSTEM INITIALIZATION...',
+        '> WARNING: EMERGENCY MODE ACTIVE',
         '> LOADING WEBGL SHADERS...',
-        '> CONNECTING TO CYBERSPACE...',
-        '> DECRYPTING BIOMETRIC DATA...',
-        '> GLITCH PROTOCOLS: ACTIVE',
-        '> ACCESS GRANTED'
+        '> NEURAL INTERFACE: ONLINE',
+        '> GLITCH PROTOCOLS: ENGAGED',
+        '> STATUS: OPERATIONAL'
     ];
 
-    console.log('%c' + bootMessages.join('\n'), 'color: #00ffff; font-family: monospace; font-size: 12px;');
+    console.log('%c' + bootMessages.join('\n'), 'color: #ff2a2a; font-family: monospace; font-size: 12px; font-weight: bold;');
 });
