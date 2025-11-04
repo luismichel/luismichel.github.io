@@ -48,6 +48,12 @@ body[data-state="emergency"] {
     --bg-tint: #0a0000;
 }
 
+body[data-state="abyss"] {
+    --primary-color: #8b0000;
+    --secondary-color: #ff2a2a;
+    --bg-tint: #1a0000;
+}
+
 body {
     transition: background-color 1s ease;
     background-color: var(--bg-tint, #0a0000);

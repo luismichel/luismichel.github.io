@@ -20,6 +20,10 @@ let lastMouseY = 0.5;
 let mouseVelocity = 0;
 let lastMouseTime = 0;
 
+// Easter egg elements
+let redVignette, abyssMessage;
+let abyssMessageShown = false;
+
 // Vertex shader - simple passthrough
 const vertexShaderSource = `
     attribute vec2 position;
@@ -356,34 +360,45 @@ function updateSystemStatus() {
         statusIndicator.classList.add('glitching', 'critical');
         statusIndicator.classList.remove('warning');
         bodyElement.setAttribute('data-state', 'critical');
-    } else {
+    } else if (distortionLevel < 15.0) {
         statusIndicator.querySelector('.status-value').textContent = 'EMERGENCY';
         statusIndicator.classList.add('glitching', 'critical');
         bodyElement.setAttribute('data-state', 'emergency');
+    } else {
+        // ABYSS state for extreme distortion
+        statusIndicator.querySelector('.status-value').textContent = 'ABYSS';
+        statusIndicator.classList.add('glitching', 'critical');
+        bodyElement.setAttribute('data-state', 'abyss');
     }
 
     // Easter egg: Red vignette effect for extreme scroll
-    const redVignette = document.querySelector('.red-vignette');
-    const abyssMessage = document.querySelector('.abyss-message');
+    if (redVignette && abyssMessage) {
+        if (distortionLevel > 15.0) {
+            // Start showing red vignette
+            redVignette.classList.add('active');
 
-    if (distortionLevel > 15.0) {
-        // Start showing red vignette
-        redVignette.classList.add('active');
-
-        // Full takeover at extreme levels
-        if (distortionLevel > 25.0) {
-            redVignette.classList.add('full-takeover');
-            // Show cryptic message after delay
-            setTimeout(() => {
-                abyssMessage.classList.add('visible');
-            }, 2000);
+            // Full takeover at extreme levels
+            if (distortionLevel > 25.0) {
+                redVignette.classList.add('full-takeover');
+                // Show cryptic message after delay (only once)
+                if (!abyssMessageShown) {
+                    abyssMessageShown = true;
+                    setTimeout(() => {
+                        if (abyssMessage) {
+                            abyssMessage.classList.add('visible');
+                        }
+                    }, 2000);
+                }
+            } else {
+                redVignette.classList.remove('full-takeover');
+                abyssMessage.classList.remove('visible');
+                abyssMessageShown = false;
+            }
         } else {
-            redVignette.classList.remove('full-takeover');
+            redVignette.classList.remove('active', 'full-takeover');
             abyssMessage.classList.remove('visible');
+            abyssMessageShown = false;
         }
-    } else {
-        redVignette.classList.remove('active', 'full-takeover');
-        abyssMessage.classList.remove('visible');
     }
 
     requestAnimationFrame(updateSystemStatus);
@@ -392,6 +407,8 @@ function updateSystemStatus() {
 // ===== Anime.js Animations =====
 document.addEventListener('DOMContentLoaded', function() {
     statusIndicator = document.querySelector('.status-indicator');
+    redVignette = document.querySelector('.red-vignette');
+    abyssMessage = document.querySelector('.abyss-message');
 
     // Initialize WebGL
     initWebGL();
@@ -754,6 +771,13 @@ document.addEventListener('dblclick', (e) => {
     statusIndicator.querySelector('.status-value').textContent = 'STABLE';
     statusIndicator.classList.remove('glitching', 'warning', 'critical');
     document.body.setAttribute('data-state', 'stable');
+
+    // Reset easter egg elements
+    if (redVignette && abyssMessage) {
+        redVignette.classList.remove('active', 'full-takeover');
+        abyssMessage.classList.remove('visible');
+        abyssMessageShown = false;
+    }
 
     console.log('%c> SYSTEM RESET\n> GRID RESTORED\n> STATUS: STABLE', 'color: #00ffff; font-family: monospace; font-size: 12px;');
 });
