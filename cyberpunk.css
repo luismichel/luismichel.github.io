@@ -133,12 +133,54 @@ body {
 }
 
 @keyframes glitch {
-    0% { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
-    2% { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
-    4% { text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink); }
-    6% { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
-    8% { text-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple); }
-    10% { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
+    0% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(0) scaleX(1) skew(0deg);
+    }
+    2% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(0) scaleX(1) skew(0deg);
+    }
+    4% {
+        text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+        transform: translateX(-8px) scaleX(1.15) skew(2deg);
+    }
+    5% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(6px) scaleX(0.88) skew(-1.5deg);
+    }
+    6% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(0) scaleX(1) skew(0deg);
+    }
+    8% {
+        text-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple);
+        transform: translateX(5px) scaleX(1.08) skew(-2deg);
+    }
+    9% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(-4px) scaleX(0.95) skew(1deg);
+    }
+    10% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(0) scaleX(1) skew(0deg);
+    }
+    14% {
+        text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+        transform: translateX(-10px) scaleX(1.2) skew(3deg);
+    }
+    15% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(7px) scaleX(0.85) skew(-2.5deg);
+    }
+    16% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(0) scaleX(1) skew(0deg);
+    }
+    100% {
+        text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+        transform: translateX(0) scaleX(1) skew(0deg);
+    }
 }
 
 @keyframes glitch-anim {

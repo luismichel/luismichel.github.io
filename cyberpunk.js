@@ -5,6 +5,10 @@ let glitchIntensity = 0.0;
 let statusIndicator;
 const statusMessages = ['STABLE', 'FLUCTUATING', 'UNSTABLE', 'CRITICAL', 'CORRUPTED'];
 
+// Ripple effect variables
+let ripples = [];
+const MAX_RIPPLES = 3;
+
 // Vertex shader - simple passthrough
 const vertexShaderSource = `
     attribute vec2 position;
@@ -13,13 +17,14 @@ const vertexShaderSource = `
     }
 `;
 
-// Fragment shader - grid with localized glitch effect
+// Fragment shader - grid with localized glitch effect and ripples
 const fragmentShaderSource = `
     precision mediump float;
     uniform vec2 u_resolution;
     uniform vec2 u_mouse;
     uniform float u_time;
     uniform float u_glitchIntensity;
+    uniform vec3 u_ripples[3]; // x, y, age for each ripple
 
     // Noise function
     float random(vec2 st) {
@@ -52,14 +57,37 @@ const fragmentShaderSource = `
         // Glitch effect near mouse
         float glitchZone = mouseDist * u_glitchIntensity;
 
+        // Ripple wave effect
+        float rippleEffect = 0.0;
+        for (int i = 0; i < 3; i++) {
+            vec2 rippleCenter = u_ripples[i].xy;
+            float rippleAge = u_ripples[i].z;
+
+            if (rippleAge > 0.0 && rippleAge < 1.0) {
+                float rippleDist = distance(st, rippleCenter);
+                float rippleRadius = rippleAge * 0.5; // Max radius
+                float rippleWidth = 0.1;
+
+                // Create wave that expands outward
+                float wave = smoothstep(rippleRadius + rippleWidth, rippleRadius, rippleDist)
+                           * smoothstep(rippleRadius - rippleWidth, rippleRadius, rippleDist);
+
+                // Fade out over time
+                wave *= (1.0 - rippleAge);
+
+                rippleEffect += wave * 0.03 * sin(rippleDist * 50.0 - rippleAge * 20.0);
+            }
+        }
+
         // Horizontal scan line distortion
         float scanLine = sin(st.y * 100.0 + u_time * 5.0) * 0.5 + 0.5;
         float horizontalGlitch = noise(vec2(st.y * 10.0, u_time * 2.0)) * glitchZone;
 
-        // Apply horizontal distortion
+        // Apply horizontal distortion and ripple
         vec2 distortedSt = st;
         distortedSt.x += horizontalGlitch * 0.3 * sin(u_time * 10.0);
         distortedSt.x += scanLine * glitchZone * 0.1;
+        distortedSt += rippleEffect; // Add ripple displacement
 
         // Recalculate grid with distortion
         vec2 distortedGrid = fract(distortedSt * gridSize);
@@ -82,12 +110,6 @@ const fragmentShaderSource = `
 
         // Apply grid
         color += gridLine * finalGridColor * (0.15 + glitchZone * 0.6);
-
-        // Add random pixel corruption in glitch zone
-        float corruption = random(vec2(floor(st.x * 100.0), floor(st.y * 100.0 + u_time * 50.0)));
-        if (corruption > 0.97 && glitchZone > 0.3) {
-            color += vec3(1.0, 0.0, 1.0) * 0.8;
-        }
 
         // Horizontal tear lines
         float tearLine = step(0.995, noise(vec2(st.y * 2.0, u_time * 5.0)));
@@ -184,6 +206,17 @@ function renderWebGL() {
 
     gl.useProgram(program);
 
+    // Update ripples (age them)
+    const currentTime = performance.now() / 1000.0;
+    ripples.forEach(ripple => {
+        if (ripple.active) {
+            ripple.age = (currentTime - ripple.startTime) / 1.5; // 1.5 second duration
+            if (ripple.age > 1.0) {
+                ripple.active = false;
+            }
+        }
+    });
+
     // Update uniforms
     const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
@@ -192,10 +225,22 @@ function renderWebGL() {
     gl.uniform2f(mouseLocation, mouseX, mouseY);
 
     const timeLocation = gl.getUniformLocation(program, 'u_time');
-    gl.uniform1f(timeLocation, performance.now() / 1000.0);
+    gl.uniform1f(timeLocation, currentTime);
 
     const glitchLocation = gl.getUniformLocation(program, 'u_glitchIntensity');
     gl.uniform1f(glitchLocation, glitchIntensity);
+
+    // Update ripple uniforms
+    const ripplesLocation = gl.getUniformLocation(program, 'u_ripples');
+    const rippleData = [];
+    for (let i = 0; i < MAX_RIPPLES; i++) {
+        if (i < ripples.length && ripples[i].active) {
+            rippleData.push(ripples[i].x, ripples[i].y, ripples[i].age);
+        } else {
+            rippleData.push(0.0, 0.0, -1.0); // Inactive ripple
+        }
+    }
+    gl.uniform3fv(ripplesLocation, rippleData);
 
     // Draw
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -488,6 +533,31 @@ document.addEventListener('mousemove', (e) => {
         duration: 2000,
         easing: 'easeOutQuad'
     });
+});
+
+// Click to create ripple effect
+document.addEventListener('click', (e) => {
+    const clickX = e.clientX / window.innerWidth;
+    const clickY = 1.0 - (e.clientY / window.innerHeight);
+
+    // Add new ripple
+    const newRipple = {
+        x: clickX,
+        y: clickY,
+        age: 0.0,
+        startTime: performance.now() / 1000.0,
+        active: true
+    };
+
+    // Remove oldest inactive ripple if at max capacity
+    if (ripples.length >= MAX_RIPPLES) {
+        ripples = ripples.filter(r => r.active);
+        if (ripples.length >= MAX_RIPPLES) {
+            ripples.shift(); // Remove oldest
+        }
+    }
+
+    ripples.push(newRipple);
 });
 
 // Handle window resize
