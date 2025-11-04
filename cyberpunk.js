@@ -14,6 +14,12 @@ let scrollAccumulator = 0.0;
 let scrollVelocity = 0.0;
 let targetScroll = 0.0;
 
+// Mouse tracking for title interaction
+let lastMouseX = 0.5;
+let lastMouseY = 0.5;
+let mouseVelocity = 0;
+let lastMouseTime = 0;
+
 // Vertex shader - simple passthrough
 const vertexShaderSource = `
     attribute vec2 position;
@@ -148,17 +154,36 @@ const fragmentShaderSource = `
         // Color cycling for glitch
         float colorShift = noise(vec2(u_time * 3.0, st.y * 5.0)) * glitchZone;
 
-        // Emergency red grid with glitch color shifts
-        vec3 gridColor = vec3(1.0, 0.165, 0.165); // Emergency Red
-        vec3 glitchColor = vec3(1.0, 0.42, 0.21); // Alert Orange
+        // Dynamic colors based on scroll distortion level
+        float distortionLevel = clamp(abs(u_scrollDistortion) / 8.0, 0.0, 1.0);
+
+        // Color gradient: Cyan (stable) -> Green -> Yellow -> Orange -> Red (emergency)
+        vec3 stableColor = vec3(0.0, 1.0, 1.0); // Cyan
+        vec3 fluctuatingColor = vec3(0.0, 1.0, 0.53); // Green
+        vec3 warningColor = vec3(1.0, 0.67, 0.0); // Yellow
+        vec3 criticalColor = vec3(1.0, 0.42, 0.21); // Orange
+        vec3 emergencyColor = vec3(1.0, 0.165, 0.165); // Red
+
+        vec3 gridColor;
+        if (distortionLevel < 0.25) {
+            gridColor = mix(stableColor, fluctuatingColor, distortionLevel * 4.0);
+        } else if (distortionLevel < 0.5) {
+            gridColor = mix(fluctuatingColor, warningColor, (distortionLevel - 0.25) * 4.0);
+        } else if (distortionLevel < 0.75) {
+            gridColor = mix(warningColor, criticalColor, (distortionLevel - 0.5) * 4.0);
+        } else {
+            gridColor = mix(criticalColor, emergencyColor, (distortionLevel - 0.75) * 4.0);
+        }
+
+        vec3 glitchColor = mix(gridColor, emergencyColor, colorShift);
         vec3 finalGridColor = mix(gridColor, glitchColor, colorShift);
 
         // Apply grid
         color += gridLine * finalGridColor * (0.15 + glitchZone * 0.6);
 
-        // Horizontal tear lines
+        // Horizontal tear lines with dynamic color
         float tearLine = step(0.995, noise(vec2(st.y * 2.0, u_time * 5.0)));
-        color += tearLine * glitchZone * vec3(1.0, 0.165, 0.165);
+        color += tearLine * glitchZone * gridColor;
 
         // RGB split effect
         if (glitchZone > 0.5) {
@@ -297,7 +322,7 @@ function renderWebGL() {
     requestAnimationFrame(renderWebGL);
 }
 
-// Update glitch intensity and status
+// Update glitch intensity and status based on scroll distortion
 function updateSystemStatus() {
     const dist = Math.sqrt(Math.pow(mouseX - 0.5, 2) + Math.pow(mouseY - 0.5, 2));
     const maxDist = Math.sqrt(0.5);
@@ -306,22 +331,35 @@ function updateSystemStatus() {
     // Glitch intensity based on mouse movement
     glitchIntensity = normalizedDist * 2.0;
 
-    // Update status indicator
-    if (glitchIntensity < 0.3) {
+    // Calculate distortion level from scroll accumulator
+    const distortionLevel = Math.abs(scrollAccumulator);
+
+    // Update status indicator based on scroll distortion
+    const bodyElement = document.body;
+
+    if (distortionLevel < 0.5) {
         statusIndicator.querySelector('.status-value').textContent = 'STABLE';
-        statusIndicator.classList.remove('glitching');
-    } else if (glitchIntensity < 0.6) {
+        statusIndicator.classList.remove('glitching', 'warning', 'critical');
+        bodyElement.setAttribute('data-state', 'stable');
+    } else if (distortionLevel < 2.0) {
         statusIndicator.querySelector('.status-value').textContent = 'FLUCTUATING';
         statusIndicator.classList.add('glitching');
-    } else if (glitchIntensity < 1.0) {
-        statusIndicator.querySelector('.status-value').textContent = 'UNSTABLE';
-        statusIndicator.classList.add('glitching');
-    } else if (glitchIntensity < 1.5) {
+        statusIndicator.classList.remove('warning', 'critical');
+        bodyElement.setAttribute('data-state', 'fluctuating');
+    } else if (distortionLevel < 4.0) {
+        statusIndicator.querySelector('.status-value').textContent = 'WARNING';
+        statusIndicator.classList.add('glitching', 'warning');
+        statusIndicator.classList.remove('critical');
+        bodyElement.setAttribute('data-state', 'warning');
+    } else if (distortionLevel < 8.0) {
         statusIndicator.querySelector('.status-value').textContent = 'CRITICAL';
-        statusIndicator.classList.add('glitching');
+        statusIndicator.classList.add('glitching', 'critical');
+        statusIndicator.classList.remove('warning');
+        bodyElement.setAttribute('data-state', 'critical');
     } else {
-        statusIndicator.querySelector('.status-value').textContent = 'CORRUPTED';
-        statusIndicator.classList.add('glitching');
+        statusIndicator.querySelector('.status-value').textContent = 'EMERGENCY';
+        statusIndicator.classList.add('glitching', 'critical');
+        bodyElement.setAttribute('data-state', 'emergency');
     }
 
     requestAnimationFrame(updateSystemStatus);
@@ -560,10 +598,25 @@ setInterval(() => {
 // Mouse tracking for WebGL and parallax
 document.addEventListener('mousemove', (e) => {
     // Update WebGL mouse position
-    mouseX = e.clientX / window.innerWidth;
-    mouseY = 1.0 - (e.clientY / window.innerHeight);
+    const newMouseX = e.clientX / window.innerWidth;
+    const newMouseY = 1.0 - (e.clientY / window.innerHeight);
 
-    // Parallax effect
+    // Calculate mouse velocity for title scaling
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - lastMouseTime) / 1000.0;
+    const deltaX = newMouseX - lastMouseX;
+    const deltaY = newMouseY - lastMouseY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    mouseVelocity = deltaTime > 0 ? distance / deltaTime : 0;
+    lastMouseTime = currentTime;
+    lastMouseX = newMouseX;
+    lastMouseY = newMouseY;
+
+    mouseX = newMouseX;
+    mouseY = newMouseY;
+
+    // Parallax effect for content
     const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
     const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
 
@@ -580,6 +633,23 @@ document.addEventListener('mousemove', (e) => {
         translateX: -moveX * 2,
         translateY: -moveY * 2,
         duration: 2000,
+        easing: 'easeOutQuad'
+    });
+
+    // Title reacts inversely to mouse position (moves away from cursor)
+    const titleMoveX = -(e.clientX - window.innerWidth / 2) * 0.015;
+    const titleMoveY = -(e.clientY - window.innerHeight / 2) * 0.015;
+
+    // Scale title based on mouse velocity
+    const velocityScale = Math.min(mouseVelocity * 0.5, 0.15);
+    const titleScale = 1.0 + velocityScale;
+
+    anime({
+        targets: '.glitch',
+        translateX: titleMoveX,
+        translateY: titleMoveY,
+        scale: titleScale,
+        duration: 300,
         easing: 'easeOutQuad'
     });
 });
@@ -607,6 +677,61 @@ document.addEventListener('click', (e) => {
     }
 
     ripples.push(newRipple);
+});
+
+// Double-click to reset everything to stable state
+document.addEventListener('dblclick', (e) => {
+    // Reset scroll accumulator
+    scrollAccumulator = 0.0;
+    targetScroll = 0.0;
+    scrollVelocity = 0.0;
+
+    // Smoothly animate back to neutral state
+    anime({
+        targets: { value: scrollAccumulator },
+        value: 0,
+        duration: 1500,
+        easing: 'easeOutElastic(1, .6)',
+        update: function(anim) {
+            scrollAccumulator = anim.animations[0].currentValue;
+        }
+    });
+
+    // Reset container transforms
+    anime({
+        targets: '.container',
+        rotateZ: 0,
+        rotateX: 0,
+        rotateY: 0,
+        translateZ: 0,
+        duration: 1500,
+        easing: 'easeOutElastic(1, .6)'
+    });
+
+    // Reset background grid
+    anime({
+        targets: '.background-grid',
+        rotateZ: 0,
+        scale: 1,
+        duration: 1500,
+        easing: 'easeOutElastic(1, .6)'
+    });
+
+    // Reset title distortions
+    anime({
+        targets: '.glitch',
+        skewX: 0,
+        scaleY: 1,
+        duration: 1500,
+        easing: 'easeOutElastic(1, .6)'
+    });
+
+    // Force status update to STABLE
+    statusIndicator.querySelector('.status-value').textContent = 'STABLE';
+    statusIndicator.classList.remove('glitching', 'warning', 'critical');
+    document.body.setAttribute('data-state', 'stable');
+
+    console.log('%c> SYSTEM RESET\n> GRID RESTORED\n> STATUS: STABLE', 'color: #00ffff; font-family: monospace; font-size: 12px;');
 });
 
 // Scroll-based mathematical distortion
