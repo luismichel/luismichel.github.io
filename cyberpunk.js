@@ -362,6 +362,30 @@ function updateSystemStatus() {
         bodyElement.setAttribute('data-state', 'emergency');
     }
 
+    // Easter egg: Red vignette effect for extreme scroll
+    const redVignette = document.querySelector('.red-vignette');
+    const abyssMessage = document.querySelector('.abyss-message');
+
+    if (distortionLevel > 15.0) {
+        // Start showing red vignette
+        redVignette.classList.add('active');
+
+        // Full takeover at extreme levels
+        if (distortionLevel > 25.0) {
+            redVignette.classList.add('full-takeover');
+            // Show cryptic message after delay
+            setTimeout(() => {
+                abyssMessage.classList.add('visible');
+            }, 2000);
+        } else {
+            redVignette.classList.remove('full-takeover');
+            abyssMessage.classList.remove('visible');
+        }
+    } else {
+        redVignette.classList.remove('active', 'full-takeover');
+        abyssMessage.classList.remove('visible');
+    }
+
     requestAnimationFrame(updateSystemStatus);
 }
 
