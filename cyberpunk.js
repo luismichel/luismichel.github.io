@@ -9,6 +9,11 @@ const statusMessages = ['STABLE', 'FLUCTUATING', 'UNSTABLE', 'CRITICAL', 'CORRUP
 let ripples = [];
 const MAX_RIPPLES = 3;
 
+// Scroll-based distortion variables
+let scrollAccumulator = 0.0;
+let scrollVelocity = 0.0;
+let targetScroll = 0.0;
+
 // Vertex shader - simple passthrough
 const vertexShaderSource = `
     attribute vec2 position;
@@ -25,6 +30,7 @@ const fragmentShaderSource = `
     uniform float u_time;
     uniform float u_glitchIntensity;
     uniform vec3 u_ripples[3]; // x, y, age for each ripple
+    uniform float u_scrollDistortion; // Scroll-based distortion parameter
 
     // Noise function
     float random(vec2 st) {
@@ -42,8 +48,47 @@ const fragmentShaderSource = `
         return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
     }
 
+    // Mathematical transformation functions
+    vec2 applyScrollDistortion(vec2 coord, float scroll) {
+        // Center coordinates around origin
+        vec2 centered = coord - 0.5;
+
+        // Rotation matrix based on scroll
+        float angle = scroll * 0.1;
+        mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+        centered = rotation * centered;
+
+        // Sine wave distortion
+        float waveFreq = 3.0 + scroll * 0.5;
+        float waveAmp = 0.05 * sin(scroll * 0.3);
+        centered.x += sin(centered.y * waveFreq + scroll) * waveAmp;
+        centered.y += cos(centered.x * waveFreq + scroll * 1.3) * waveAmp;
+
+        // Barrel distortion (fisheye/pincushion)
+        float distortionStrength = 0.2 * sin(scroll * 0.2);
+        float r = length(centered);
+        float theta = atan(centered.y, centered.x);
+
+        // Apply non-linear radial distortion
+        float r_distorted = r * (1.0 + distortionStrength * r * r);
+        centered = vec2(r_distorted * cos(theta), r_distorted * sin(theta));
+
+        // Twist effect based on distance from center
+        float twistAmount = scroll * 0.15;
+        float twistAngle = r * twistAmount;
+        mat2 twist = mat2(cos(twistAngle), -sin(twistAngle), sin(twistAngle), cos(twistAngle));
+        centered = twist * centered;
+
+        // Return to normal coordinates
+        return centered + 0.5;
+    }
+
     void main() {
         vec2 st = gl_FragCoord.xy / u_resolution.xy;
+
+        // Apply mathematical scroll distortion to entire plane
+        st = applyScrollDistortion(st, u_scrollDistortion);
+
         vec3 color = vec3(0.0);
 
         // Distance from mouse
@@ -241,6 +286,10 @@ function renderWebGL() {
         }
     }
     gl.uniform3fv(ripplesLocation, rippleData);
+
+    // Update scroll distortion uniform
+    const scrollLocation = gl.getUniformLocation(program, 'u_scrollDistortion');
+    gl.uniform1f(scrollLocation, scrollAccumulator);
 
     // Draw
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -559,6 +608,87 @@ document.addEventListener('click', (e) => {
 
     ripples.push(newRipple);
 });
+
+// Scroll-based mathematical distortion
+let lastScrollTime = 0;
+document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - lastScrollTime) / 1000.0;
+    lastScrollTime = currentTime;
+
+    // Accumulate scroll with velocity
+    const scrollDelta = e.deltaY * 0.001;
+    targetScroll += scrollDelta;
+
+    // Add some velocity for momentum
+    scrollVelocity = scrollDelta / (deltaTime + 0.001);
+
+    // Animate scroll value smoothly with anime.js
+    anime.remove(scrollAccumulator);
+    anime({
+        targets: { value: scrollAccumulator },
+        value: targetScroll,
+        duration: 800,
+        easing: 'easeOutCubic',
+        update: function(anim) {
+            scrollAccumulator = anim.animations[0].currentValue;
+        }
+    });
+
+    // Apply 3D transforms to main content based on scroll
+    const rotation = (scrollAccumulator % (Math.PI * 2)) * (180 / Math.PI);
+    const perspectiveZ = Math.sin(scrollAccumulator * 0.3) * 50;
+    const skewValue = Math.sin(scrollAccumulator * 0.5) * 5;
+
+    anime({
+        targets: '.container',
+        rotateZ: rotation * 0.1,
+        rotateX: Math.sin(scrollAccumulator * 0.2) * 15,
+        rotateY: Math.cos(scrollAccumulator * 0.15) * 15,
+        translateZ: perspectiveZ,
+        duration: 800,
+        easing: 'easeOutCubic'
+    });
+
+    // Distort background grid with different math
+    anime({
+        targets: '.background-grid',
+        rotateZ: -rotation * 0.15,
+        scale: 1 + Math.sin(scrollAccumulator * 0.1) * 0.2,
+        duration: 1000,
+        easing: 'easeOutQuad'
+    });
+
+    // Skew and distort the main title
+    const titleSkew = Math.sin(scrollAccumulator * 0.4) * 10;
+    const titleScale = 1 + Math.sin(scrollAccumulator * 0.2) * 0.1;
+
+    anime({
+        targets: '.glitch',
+        skewX: titleSkew,
+        scaleY: titleScale,
+        duration: 600,
+        easing: 'easeOutElastic(1, .5)'
+    });
+
+}, { passive: false });
+
+// Smooth decay of scroll velocity over time
+function updateScrollPhysics() {
+    // Apply friction to velocity
+    scrollVelocity *= 0.95;
+
+    // Update target scroll with residual velocity
+    if (Math.abs(scrollVelocity) > 0.001) {
+        targetScroll += scrollVelocity * 0.016; // Assuming ~60fps
+        scrollAccumulator += (targetScroll - scrollAccumulator) * 0.1;
+    }
+
+    requestAnimationFrame(updateScrollPhysics);
+}
+updateScrollPhysics();
 
 // Handle window resize
 window.addEventListener('resize', () => {

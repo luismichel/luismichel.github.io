@@ -22,6 +22,8 @@ body {
     overflow: hidden;
     height: 100vh;
     position: relative;
+    perspective: 1000px;
+    perspective-origin: 50% 50%;
 }
 
 /* Scanline effect */
@@ -80,12 +82,15 @@ body {
     min-height: 100vh;
     padding: 2rem;
     z-index: 10;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
 }
 
 .content {
     text-align: center;
     z-index: 20;
     position: relative;
+    transform-style: preserve-3d;
 }
 
 /* Glitch effect for main title */
