@@ -425,8 +425,13 @@ function updateSystemStatus() {
         statusIndicator.querySelector('.status-value').textContent = 'EMERGENCY';
         statusIndicator.classList.add('glitching', 'critical');
         bodyElement.setAttribute('data-state', 'emergency');
+    } else if (distortionLevel < 25.0) {
+        // Extended emergency state before abyss
+        statusIndicator.querySelector('.status-value').textContent = 'EMERGENCY';
+        statusIndicator.classList.add('glitching', 'critical');
+        bodyElement.setAttribute('data-state', 'emergency');
     } else {
-        // ABYSS state for extreme distortion
+        // ABYSS state for extreme distortion (now at 25.0+)
         statusIndicator.querySelector('.status-value').textContent = 'ABYSS';
         statusIndicator.classList.add('glitching', 'critical');
         bodyElement.setAttribute('data-state', 'abyss');
@@ -434,10 +439,10 @@ function updateSystemStatus() {
 
     // Easter egg: Abyss takeover - grid squares turn red from edges to center
     if (abyssMessage) {
-        if (distortionLevel > 15.0) {
+        if (distortionLevel > 25.0) {
             // Calculate takeover progress based on how far beyond threshold we are
-            // Maps distortionLevel 15.0-45.0 to abyssTakeover 0.0-1.0 (larger threshold)
-            const targetTakeover = Math.min((distortionLevel - 15.0) / 30.0, 1.0);
+            // Maps distortionLevel 25.0-55.0 to abyssTakeover 0.0-1.0 (larger threshold)
+            const targetTakeover = Math.min((distortionLevel - 25.0) / 30.0, 1.0);
 
             // Smoothly animate to target takeover value
             anime({
@@ -481,6 +486,50 @@ function updateSystemStatus() {
     requestAnimationFrame(updateSystemStatus);
 }
 
+// ===== Pi Movie Inspired Scrolling Text =====
+function initPiTextScroll() {
+    const container = document.querySelector('.pi-text-scroll');
+    if (!container) return;
+
+    // Original mathematical/system dialogue inspired by Pi movie aesthetic
+    // Translated to Japanese for subtle background effect
+    const textLines = [
+        '> システム初期化中...',
+        '> 計算開始',
+        '> パターン認識: 処理中',
+        '> 数列解析: 進行中',
+        '> リターンキーを押してください',
+        '> 午前10時 - リターンキーを押してください',
+        '> データストリーム: アクティブ',
+        '> 予測モデル: 構築中',
+        '> カオス理論: 適用中',
+        '> パラメータ調整: 実行中',
+        '> シーケンス検証: 進行中',
+        '> エントロピー測定: 完了',
+        '> 収束点: 計算中',
+        '> 確率行列: 生成中',
+        '> フィードバックループ: 検出',
+        '> システム状態: 監視中',
+        '> アルゴリズム反復: 継続中',
+        '> 出力準備完了',
+        '> 待機中... リターンキーを押してください',
+        ''
+    ];
+
+    const fullText = textLines.join('\n');
+
+    // Create multiple scrolling columns with different speeds
+    for (let i = 0; i < 5; i++) {
+        const line = document.createElement('div');
+        line.className = 'pi-text-scroll-line';
+        line.textContent = fullText;
+        line.style.left = `${i * 25}%`;
+        line.style.animationDuration = `${30 + i * 10}s`;
+        line.style.animationDelay = `${-i * 5}s`;
+        container.appendChild(line);
+    }
+}
+
 // ===== Anime.js Animations =====
 document.addEventListener('DOMContentLoaded', function() {
     statusIndicator = document.querySelector('.status-indicator');
@@ -488,6 +537,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize window.abyssTakeover for anime.js
     window.abyssTakeover = 0.0;
+
+    // Initialize scrolling Pi text
+    initPiTextScroll();
 
     // Initialize WebGL
     initWebGL();
