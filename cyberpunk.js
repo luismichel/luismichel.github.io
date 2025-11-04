@@ -95,6 +95,32 @@ const fragmentShaderSource = `
         mat2 twist = mat2(cos(twistAngle), -sin(twistAngle), sin(twistAngle), cos(twistAngle));
         centered = twist * centered;
 
+        // Fibonacci Spiral Distortion (activates at high distortion levels)
+        // Golden ratio φ = 1.618... and logarithmic spiral: r = φ^(θ/(π/2))
+        if (abs(scroll) > 25.0) {
+            float PHI = 1.618033988749;
+            float spiralIntensity = smoothstep(25.0, 35.0, abs(scroll));
+
+            // Convert to polar coordinates
+            float spiralR = length(centered);
+            float spiralTheta = theta;
+
+            // Apply golden ratio logarithmic spiral distortion
+            // r_new = r * φ^(θ/2) creates the spiral warping
+            float spiralFactor = pow(PHI, spiralTheta / 2.0);
+            float spiralDistortion = (spiralFactor - 1.0) * 0.08 * spiralIntensity;
+
+            // Apply spiral displacement
+            spiralR += spiralDistortion * sin(scroll * 0.1);
+
+            // Rotate along spiral path
+            float spiralRotation = spiralR * 2.0 * spiralIntensity;
+            spiralTheta += spiralRotation;
+
+            // Convert back to cartesian
+            centered = vec2(spiralR * cos(spiralTheta), spiralR * sin(spiralTheta));
+        }
+
         // Return to normal coordinates
         return centered + 0.5;
     }
