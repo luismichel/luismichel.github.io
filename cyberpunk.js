@@ -467,6 +467,95 @@ function updateSystemStatus() {
         lastLoggedLevel = logLevel;
     }
 
+    // Golden Ratio Visualization - Progressive Activation
+    const phiDisplay = document.querySelector('.phi-digits');
+    const spiralOverlay = document.querySelector('.golden-spiral-overlay');
+
+    if (distortionLevel >= 8.0) {
+        // CRITICAL: Show φ digits and start expanding
+        if (phiDisplay && !phiDisplay.classList.contains('visible')) {
+            phiDisplay.classList.add('visible');
+            generateFibonacciSpiral();
+            startPhiExpansion(500); // Slow expansion initially
+        }
+    }
+
+    if (distortionLevel >= 15.0) {
+        // EMERGENCY: Show spiral and speed up digit expansion
+        if (spiralOverlay && !spiralOverlay.classList.contains('visible')) {
+            spiralOverlay.classList.add('visible');
+        }
+        if (phiInterval) {
+            stopPhiExpansion();
+            startPhiExpansion(200); // Faster expansion
+        }
+    }
+
+    if (distortionLevel >= 25.0) {
+        // ABYSS: Maximum speed digit expansion
+        if (phiInterval) {
+            stopPhiExpansion();
+            startPhiExpansion(50); // Very fast expansion
+        }
+    }
+
+    if (distortionLevel < 8.0) {
+        // Reset when returning to lower states
+        if (phiDisplay) phiDisplay.classList.remove('visible');
+        if (spiralOverlay) spiralOverlay.classList.remove('visible');
+        resetPhiDigits();
+    }
+
+    // Glitch Terminal - Progressive Corruption
+    const terminal = document.querySelector('.glitch-terminal');
+
+    if (distortionLevel >= 8.0 && distortionLevel < 15.0) {
+        // CRITICAL: Terminal appears, slow glitching
+        if (terminal && !terminal.classList.contains('visible')) {
+            terminal.classList.add('visible');
+            startTerminalGlitching(3000); // 1 character every 3 seconds
+            corruptTerminalPrompt(0);
+        }
+    }
+
+    if (distortionLevel >= 15.0 && distortionLevel < 25.0) {
+        // EMERGENCY: Faster glitching, corrupted prompt
+        if (terminal) {
+            if (!terminal.classList.contains('visible')) {
+                terminal.classList.add('visible');
+            }
+            stopTerminalGlitching();
+            startTerminalGlitching(1000); // 1 character per second
+            corruptTerminalPrompt(1);
+        }
+    }
+
+    if (distortionLevel >= 25.0) {
+        // ABYSS: Full corruption, rapid spam
+        if (terminal) {
+            terminal.classList.add('corrupted');
+            stopTerminalGlitching();
+            startTerminalGlitching(100); // 10 characters per second
+            corruptTerminalPrompt(3);
+        }
+    }
+
+    if (distortionLevel < 8.0) {
+        // Reset terminal when returning to lower states
+        if (terminal) {
+            terminal.classList.remove('visible', 'corrupted');
+            clearTerminal();
+        }
+    }
+
+    // Trigger mock network requests on state transitions (when descending)
+    if (isDescending && logLevel > lastLoggedLevel) {
+        const stateMap = ['stable', 'fluctuating', 'warning', 'critical', 'emergency', 'abyss'];
+        if (logLevel >= 1 && logLevel <= 5) {
+            triggerMockRequests(stateMap[logLevel]);
+        }
+    }
+
     // Easter egg: Abyss takeover - grid squares turn red from edges to center
     if (abyssMessage) {
         if (distortionLevel > 25.0) {
@@ -555,6 +644,228 @@ function logChaosMessage(level) {
     }
 }
 
+// ===== Golden Ratio Visualization =====
+const PHI = 1.6180339887498948482;
+const PHI_DIGITS = '1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374847540880753868917521266338622235369317931800607667263544333890865959395829056383226613199282902678806752087668925017116962070322210432162695486262963136144381497587012203408058879544547492461856953648644492410443207713449470495658467885098743394422125448770664780915884607499887124007652170575179788341662562494075890697040002812104276217711177780531531714101170466659914669798731761356006708748071013179523689427521948435305678300228785699782977834784587822891109762500302696156171';
+
+let phiDigitIndex = 1;
+let phiInterval = null;
+let spiralGenerated = false;
+
+function generateFibonacciSpiral() {
+    if (spiralGenerated) return;
+
+    const path = document.getElementById('spiral-path');
+    if (!path) return;
+
+    const centerX = 500;
+    const centerY = 500;
+    const points = [];
+    const numPoints = 200;
+
+    // Generate spiral using golden ratio
+    for (let i = 0; i < numPoints; i++) {
+        const theta = i * 0.1; // Angle in radians
+        const r = Math.pow(PHI, theta / (Math.PI / 2)) * 5; // Exponential spiral
+        const x = centerX + r * Math.cos(theta);
+        const y = centerY + r * Math.sin(theta);
+        points.push({x, y});
+    }
+
+    // Create SVG path
+    let pathData = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+        pathData += ` L ${points[i].x} ${points[i].y}`;
+    }
+
+    path.setAttribute('d', pathData);
+    spiralGenerated = true;
+}
+
+function expandPhiDigits() {
+    const sequence = document.getElementById('phi-sequence');
+    if (!sequence || phiDigitIndex >= PHI_DIGITS.length) return;
+
+    sequence.textContent = PHI_DIGITS.substring(0, phiDigitIndex);
+    phiDigitIndex++;
+}
+
+function startPhiExpansion(speed = 500) {
+    if (phiInterval) clearInterval(phiInterval);
+    phiInterval = setInterval(expandPhiDigits, speed);
+}
+
+function stopPhiExpansion() {
+    if (phiInterval) {
+        clearInterval(phiInterval);
+        phiInterval = null;
+    }
+}
+
+function resetPhiDigits() {
+    phiDigitIndex = 1;
+    const sequence = document.getElementById('phi-sequence');
+    if (sequence) sequence.textContent = '1';
+    stopPhiExpansion();
+}
+
+// ===== Glitch Terminal =====
+let terminalInput = null;
+let terminalPrompt = null;
+let terminalCursor = null;
+let glitchInterval = null;
+let terminalFocused = false;
+
+const GLITCH_CHARS = [
+    '̴̡̢̧̨̛̤̰̗̘̪̫̬̮̯̹͇̈́̓̽͊̔͐͑͒͘͜͝͠͝͝͠',
+    'àáâãäåāăąǎǻȁȃảạầẩẫậằẳẵặ',
+    '!@#$%^&*()_+-=[]{}|;:,.<>?/',
+    'Ø̵̢̨̧̛̪̫̬̮̯̹͈̰̓̽͊̔͐͑͒͘͜͝͠͝͝',
+    '§¶†‡°±²³µ¿÷×',
+    'ＡＢＣＤＥＦＧ', // Full-width characters
+    'ЯѨѪѬѮѰѲѴѶѸѺѼѾҀҊҌҎҐҒҔҖҘҚҜҞҠҢҤҦҨҪҬҮҰҲҴҶҸҺҼҾӀ'
+];
+
+const PROMPT_GLITCHES = [
+    'r00t@syst3m:~$ ',
+    'rØØt@§¥§t€m:~$ ',
+    'r̴0̸0̵t̶@̷s̸y̵s̶t̴e̷m̸:̶~̴$̷ ',
+    '̴̡̢ŗ̴̨ơ̴̤o̴̰̗t̴̘̪@̴̫̬s̴̮̯y̴̹͇s̴̈́̓t̴̽͊e̴̔͐m̴͑͒:̴͘͜~̴͝͠$̴͝͝ '
+];
+
+function initGlitchTerminal() {
+    const terminal = document.querySelector('.glitch-terminal');
+    if (!terminal) return;
+
+    terminalInput = terminal.querySelector('.terminal-input');
+    terminalPrompt = terminal.querySelector('.terminal-prompt');
+    terminalCursor = terminal.querySelector('.terminal-cursor');
+
+    terminal.addEventListener('click', () => {
+        terminalFocused = true;
+        terminal.style.cursor = 'text';
+    });
+
+    document.addEventListener('keydown', handleTerminalKeypress);
+}
+
+function handleTerminalKeypress(e) {
+    if (!terminalFocused || !terminalInput) return;
+
+    if (e.key === 'Enter') {
+        triggerMockRequests();
+        e.preventDefault();
+        return;
+    }
+
+    if (e.key.length === 1) {
+        // Semi-interactive: typing produces glitch characters
+        const glitchChar = getRandomGlitchChar();
+        terminalInput.textContent += glitchChar;
+        e.preventDefault();
+    }
+
+    // Backspace/Delete don't work (loss of control)
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+    }
+}
+
+function getRandomGlitchChar() {
+    const charset = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+    return charset[Math.floor(Math.random() * charset.length)];
+}
+
+function typeGlitchCharacter(level = 1) {
+    if (!terminalInput) return;
+
+    const char = getRandomGlitchChar();
+    terminalInput.textContent += char;
+
+    // Limit length to prevent overflow
+    if (terminalInput.textContent.length > 200) {
+        terminalInput.textContent = terminalInput.textContent.substring(terminalInput.textContent.length - 100);
+    }
+}
+
+function corruptTerminalPrompt(level = 0) {
+    if (!terminalPrompt) return;
+
+    if (level < PROMPT_GLITCHES.length) {
+        terminalPrompt.textContent = PROMPT_GLITCHES[level];
+    }
+}
+
+function startTerminalGlitching(frequency) {
+    stopTerminalGlitching();
+    glitchInterval = setInterval(() => {
+        typeGlitchCharacter();
+    }, frequency);
+}
+
+function stopTerminalGlitching() {
+    if (glitchInterval) {
+        clearInterval(glitchInterval);
+        glitchInterval = null;
+    }
+}
+
+function clearTerminal() {
+    if (terminalInput) terminalInput.textContent = '';
+    if (terminalPrompt) terminalPrompt.textContent = 'root@system:~$ ';
+    stopTerminalGlitching();
+}
+
+// ===== Mock Network Requests =====
+const NETWORK_ENDPOINTS = {
+    fluctuating: [
+        {endpoint: '/api/patterns', method: 'GET', status: 200, delay: 142, response: '{"status": "analyzing", "matches": 3}'}
+    ],
+    warning: [
+        {endpoint: '/stock/prediction', method: 'POST', status: 200, delay: 289, response: '{"prediction": "divergence", "confidence": 0.87}'},
+        {endpoint: '/torah/216', method: 'GET', status: 404, delay: 521, response: '{"error": "Sequence not found"}'}
+    ],
+    critical: [
+        {endpoint: '/api/consciousness', method: 'GET', status: 500, delay: 1847, response: '{"error": "Reality matrix unstable"}'},
+        {endpoint: '/user/location', method: 'GET', status: 403, delay: 3201, response: '[REDACTED]'},
+        {endpoint: '/golden-spiral/convergence', method: 'POST', status: 200, delay: 892, response: '{"φ": 1.618033988749}'}
+    ],
+    emergency: [
+        {endpoint: '/neural/upload', method: 'POST', status: 0, delay: 5000, response: 'TIMEOUT'},
+        {endpoint: '/webcam/stream', method: 'GET', status: 403, delay: 2100, response: '{"error": "Permission denied", "message": "監視中"}'},
+        {endpoint: '/api/reality', method: 'GET', status: 0, delay: 0, response: 'ERR_CONNECTION_REFUSED'}
+    ],
+    abyss: [
+        {endpoint: '/void', method: 'GET', status: 0, delay: 0, response: 'ERR_NETWORK_FAILURE'},
+        {endpoint: '/system/collapse', method: 'POST', status: 0, delay: 0, response: '[虚無]'}
+    ]
+};
+
+function mockNetworkRequest(endpoint, method, status, delay, response) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const statusColor = status === 200 ? '#00ff88' : status >= 400 ? '#ff6b35' : status === 0 ? '#ff0000' : '#ffaa00';
+
+            console.log(
+                `%c> ${method} ${endpoint}\n  Status: ${status === 0 ? 'TIMEOUT' : status} ${status === 200 ? 'OK' : status === 404 ? 'NOT FOUND' : status === 403 ? 'FORBIDDEN' : status === 500 ? 'INTERNAL SERVER ERROR' : ''} | Response time: ${delay === 0 ? '∞' : delay + 'ms'}\n  ${response}`,
+                `color: ${statusColor}; background: rgba(0, 0, 0, 0.8); padding: 8px; font-family: 'Share Tech Mono', monospace; font-size: 11px; line-height: 1.6; border-left: 3px solid ${statusColor};`
+            );
+            resolve({endpoint, method, status, delay});
+        }, delay);
+    });
+}
+
+async function triggerMockRequests(state = 'fluctuating') {
+    const requests = NETWORK_ENDPOINTS[state];
+    if (!requests) return;
+
+    console.log(`%c\n━━━ NETWORK REQUESTS [${state.toUpperCase()}] ━━━`, 'color: #00ffff; font-weight: bold; font-size: 12px;');
+
+    for (const req of requests) {
+        await mockNetworkRequest(req.endpoint, req.method, req.status, req.delay, req.response);
+    }
+}
+
 // ===== Pi Movie Inspired Scrolling Text =====
 function initPiTextScroll() {
     const container = document.querySelector('.pi-text-scroll');
@@ -640,6 +951,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize scrolling Pi text
     initPiTextScroll();
+
+    // Initialize glitch terminal
+    initGlitchTerminal();
 
     // Initialize WebGL
     initWebGL();
@@ -1062,7 +1376,25 @@ document.addEventListener('dblclick', (e) => {
         abyssMessageShown = false;
     }
 
-    console.log('%c> SYSTEM RESET\n> GRID RESTORED\n> STATUS: STABLE', 'color: #00ffff; font-family: monospace; font-size: 12px;');
+    // Reset golden ratio elements
+    const phiDisplay = document.querySelector('.phi-digits');
+    const spiralOverlay = document.querySelector('.golden-spiral-overlay');
+    if (phiDisplay) phiDisplay.classList.remove('visible');
+    if (spiralOverlay) spiralOverlay.classList.remove('visible');
+    resetPhiDigits();
+
+    // Reset terminal
+    const terminal = document.querySelector('.glitch-terminal');
+    if (terminal) {
+        terminal.classList.remove('visible', 'corrupted');
+        clearTerminal();
+        terminalFocused = false;
+    }
+
+    // Reset logging state
+    lastLoggedLevel = -1;
+
+    console.log('%c> SYSTEM RESET\n> GRID RESTORED\n> STATUS: STABLE\n> φ SEQUENCE CLEARED\n> TERMINAL PURGED', 'color: #00ffff; font-family: monospace; font-size: 12px;');
 });
 
 // Scroll-based mathematical distortion
