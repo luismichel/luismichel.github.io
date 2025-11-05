@@ -48,6 +48,30 @@ body[data-state="emergency"] {
     --bg-tint: #0a0000;
 }
 
+/* Touch and mobile optimizations */
+* {
+    -webkit-tap-highlight-color: rgba(255, 42, 42, 0.2);
+    -webkit-touch-callout: none;
+}
+
+a, button {
+    -webkit-tap-highlight-color: rgba(255, 107, 53, 0.3);
+    touch-action: manipulation; /* Prevents double-tap zoom */
+}
+
+/* Smooth scrolling on mobile */
+html {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+/* Prevent text selection on decorative elements */
+.glitch, .subtitle, .corner, .status-indicator, .scanlines, .background-grid {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
 body[data-state="abyss"] {
     --primary-color: #8b0000;
     --secondary-color: #ff2a2a;
@@ -551,6 +575,13 @@ body {
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
+        min-height: 100vh;
+        min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+    }
+
+    .content {
+        max-width: 100%;
+        padding: 0 0.5rem;
     }
 
     .corner {
@@ -563,7 +594,7 @@ body {
     }
 
     .corner-bl, .corner-br {
-        bottom: 10px;
+        bottom: 50px; /* Account for terminal at bottom */
     }
 
     .corner-tl, .corner-bl {
@@ -575,10 +606,212 @@ body {
     }
 
     .status-indicator {
-        top: 50px;
-        right: 50px;
-        padding: 0.5rem 1rem;
-        font-size: 0.7rem;
+        top: 15px;
+        right: 15px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.65rem;
+    }
+
+    .status-label {
+        display: none; /* Hide "SYS:" on mobile to save space */
+    }
+
+    /* Typography adjustments */
+    .glitch {
+        font-size: clamp(2rem, 12vw, 4rem);
+        letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+        font-size: clamp(1rem, 5vw, 1.8rem);
+        letter-spacing: 0.2em;
+    }
+
+    .bio {
+        margin: 2rem 0;
+    }
+
+    .bio-text {
+        font-size: clamp(0.85rem, 3vw, 1.1rem);
+        margin: 0.8rem 0;
+        line-height: 1.6;
+    }
+
+    .contact-section {
+        margin-top: 2.5rem;
+    }
+
+    .contact-line {
+        font-size: clamp(0.8rem, 3vw, 1rem);
+        margin-bottom: 0.8rem;
+    }
+
+    .contact-box {
+        padding: 1rem;
+        margin-top: 0.8rem;
+    }
+
+    .email-link {
+        font-size: clamp(0.9rem, 4vw, 1.2rem);
+    }
+
+    /* Particles - reduce on mobile for performance */
+    .particle {
+        width: 3px;
+        height: 3px;
+    }
+
+    /* WebGL canvas optimization */
+    #webgl-canvas {
+        image-rendering: auto;
+    }
+
+    /* Reduce animation intensity on mobile */
+    .glitch::before,
+    .glitch::after {
+        animation-duration: 8s; /* Slower animations */
+    }
+
+    /* Pi text scroll - smaller and less dense on mobile */
+    .pi-text-scroll {
+        line-height: 3rem;
+        opacity: 0.03;
+    }
+
+    /* Abyss message mobile */
+    .japanese-warning {
+        font-size: clamp(2rem, 10vw, 4rem);
+        padding: 0 1rem;
+    }
+
+    .japanese-subtitle {
+        font-size: clamp(0.8rem, 2.5vw, 1.5rem);
+        padding: 0 1rem;
+    }
+
+    /* Terminal mobile */
+    .glitch-terminal {
+        height: 35px;
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+
+    .terminal-prompt {
+        margin-right: 4px;
+        font-size: 11px;
+    }
+
+    .terminal-input {
+        font-size: 11px;
+    }
+}
+
+/* Extra small devices (phones in portrait, less than 480px) */
+@media (max-width: 480px) {
+    .container {
+        padding: 0.5rem;
+    }
+
+    .glitch {
+        font-size: clamp(1.8rem, 14vw, 3.5rem);
+    }
+
+    .subtitle {
+        font-size: clamp(0.9rem, 6vw, 1.5rem);
+    }
+
+    .bio-text {
+        font-size: clamp(0.75rem, 3.5vw, 1rem);
+    }
+
+    .contact-box {
+        padding: 0.8rem;
+    }
+
+    .email-link {
+        font-size: clamp(0.8rem, 4.5vw, 1.1rem);
+        word-break: break-all; /* Allow email to break if too long */
+    }
+
+    .corner {
+        width: 25px;
+        height: 25px;
+    }
+
+    .status-indicator {
+        top: 10px;
+        right: 10px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.6rem;
+    }
+
+    /* Further reduce particles */
+    .particles {
+        opacity: 0.3;
+    }
+
+    /* Abyss message extra small */
+    .japanese-warning {
+        font-size: clamp(1.5rem, 12vw, 3rem);
+    }
+
+    .japanese-subtitle {
+        font-size: clamp(0.7rem, 3vw, 1.2rem);
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-height: 600px) and (orientation: landscape) {
+    .container {
+        padding: 0.5rem;
+        min-height: 100vh;
+    }
+
+    .glitch {
+        font-size: clamp(1.5rem, 8vw, 3rem);
+        margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+        font-size: clamp(0.8rem, 3vw, 1.3rem);
+    }
+
+    .bio {
+        margin: 1rem 0;
+    }
+
+    .bio-text {
+        font-size: clamp(0.7rem, 2vw, 0.9rem);
+        margin: 0.5rem 0;
+    }
+
+    .contact-section {
+        margin-top: 1.5rem;
+    }
+
+    .contact-box {
+        padding: 0.6rem;
+    }
+
+    .japanese-warning {
+        font-size: clamp(1.5rem, 8vh, 3rem);
+    }
+
+    .japanese-subtitle {
+        font-size: clamp(0.7rem, 2vh, 1.2rem);
+    }
+}
+
+/* High DPI / Retina display optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .glitch, .subtitle, .bio-text, .email-link {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    #webgl-canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
     }
 }
 
@@ -729,26 +962,7 @@ body {
     }
 }
 
-@media (max-width: 768px) {
-    .japanese-warning {
-        font-size: clamp(2rem, 10vw, 4rem);
-    }
-
-    .japanese-subtitle {
-        font-size: clamp(0.8rem, 2.5vw, 1.5rem);
-    }
-
-    .pi-text-scroll {
-        font-size: 0.6rem;
-        opacity: 0.05;
-    }
-
-    .glitch-terminal {
-        height: 35px;
-        font-size: 11px;
-        padding: 6px 12px;
-    }
-}
+/* Consolidate with main mobile styles above - removed duplicate */
 
 /* Glitch Terminal - Bottom Single Line */
 .glitch-terminal {
