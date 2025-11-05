@@ -1323,8 +1323,8 @@ document.addEventListener('click', (e) => {
     ripples.push(newRipple);
 });
 
-// Double-click to reset everything to stable state
-document.addEventListener('dblclick', (e) => {
+// Reset function for both double-click and double-tap
+function resetSystem() {
     // Reset scroll accumulator
     scrollAccumulator = 0.0;
     targetScroll = 0.0;
@@ -1405,6 +1405,32 @@ document.addEventListener('dblclick', (e) => {
     lastLoggedLevel = -1;
 
     console.log('%c> SYSTEM RESET\n> GRID RESTORED\n> STATUS: STABLE\n> φ SEQUENCE CLEARED\n> TERMINAL PURGED', 'color: #00ffff; font-family: monospace; font-size: 12px;');
+}
+
+// Double-click handler
+document.addEventListener('dblclick', resetSystem);
+
+// Double-tap handler for mobile
+let lastTap = 0;
+let tapTimeout = null;
+document.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+
+    clearTimeout(tapTimeout);
+
+    if (tapLength < 500 && tapLength > 0) {
+        // Double tap detected
+        e.preventDefault();
+        resetSystem();
+    } else {
+        // Single tap, wait to see if another tap comes
+        tapTimeout = setTimeout(() => {
+            clearTimeout(tapTimeout);
+        }, 500);
+    }
+
+    lastTap = currentTime;
 });
 
 // Scroll-based mathematical distortion
